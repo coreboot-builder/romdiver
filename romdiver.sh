@@ -60,4 +60,5 @@ function extract_x86_blobs() {
   execute_command "$IFDTOOL -d -f $src" "$SECURE_EXTRACT_DIR/uefi.bin" "$src.BIOS.bin"
 }
 
-is_x86_layout $1
+mkdir -p "$SECURE_EXTRACT_DIR"
+is_x86_layout "$1"
