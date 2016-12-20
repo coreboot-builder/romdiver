@@ -4,7 +4,7 @@ PACKAGES = automake autoconf make qt4-qmake build-essential libpci-dev libqt4-de
 MAKE_DIRS	= tools/fcode-utils tools/flashrom/util/ich_descriptors_tool
 QMAKE_DIRS = tools/uefitool/UEFIExtract tools/uefitool/UEFIFind
 MAKE_TOOLS =  ich_descriptors_tool romheaders
-QMAKE_TOOLS = UEFIExtract UEFIFind
+QMAKE_TOOLS = UEFIExtract
 BIN_TOOLS = tools/me-cleaner/me_cleaner.py
 
 all :  utils
