@@ -4,8 +4,6 @@ SECURE_EXTRACT_DIR="$PWD/tmp"
 ETHERNET_DEV="eth0"
 TOOLS_DIR="$PWD/bin"
 FIREJAIL=$(which firejail)
-FIREJAIL_FEATUES="--caps.drop=all --seccomp --ipc-namespace \
---overlay-tmpfs --private-dev --private-tmp"
 NC=$(which nc)
 IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
@@ -21,7 +19,8 @@ function execute_command() {
 
   mkfifo "$PWD/network-$uuid"
   ($NC -l -p 9999 < "$PWD/network-$uuid" > "$dest") &
-  $FIREJAIL "$FIREJAIL_FEATUES" \
+  $FIREJAIL --caps.drop=all --seccomp --ipc-namespace \
+    --overlay-tmpfs --private-dev --private-tmp \
     -c "$cmd && cat $file | nc localhost 9999 > $PWD/network-$uuid"
   killall nc
   rm "$PWD/network-$uuid"
