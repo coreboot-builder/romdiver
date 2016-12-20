@@ -1,14 +1,14 @@
 TOOLS_DIR = $(PWD)/bin
-PACKAGES =
+PACKAGES = automake autoconf make qt4-qmake build-essential libpci-dev libqt4-dev python3 firejail
 MAKE_DIRS	= tools/fcode-utils tools/flashrom/util/ich_descriptors_tool
-CMAKE_DIRS = tools/uefitool/UEFIExtract tools/uefitool/UEFIFind
+QMAKE_DIRS = tools/uefitool/UEFIExtract tools/uefitool/UEFIFind
 MAKE_TOOLS =  ich_descriptors_tool romheaders
-CMAKE_TOOLS = UEFIExtract UEFIFind
+QMAKE_TOOLS = UEFIExtract UEFIFind
 BIN_TOOLS = tools/me-cleaner/me_cleaner.py
 
-all : deps utils
+all :  utils
 
-deps : #sudo apt-get install
+deps : sudo apt-get install $(PACKAGES)
 
 utils :
 	mkdir $(TOOLS_DIR) || true
@@ -18,9 +18,9 @@ utils :
 			find . -name $$t -type f -exec cp {} $(TOOLS_DIR)/$${t,,} \; \
 		); done \
 	); done
-	-for d in $(CMAKE_DIRS); do ( \
+	-for d in $(QMAKE_DIRS); do ( \
 		cd $$d; qmake . && $(MAKE); \
-		for t in $(CMAKE_TOOLS); do ( \
+		for t in $(QMAKE_TOOLS); do ( \
 			find . -name $$t -type f -exec cp {} $(TOOLS_DIR)/$${t,,} \; \
 		); done \
 	); done
