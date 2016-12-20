@@ -4,6 +4,8 @@ SECURE_EXTRACT_DIR="$PWD/tmp"
 ETHERNET_DEV="eth0"
 TOOLS_DIR="$PWD/bin"
 FIREJAIL=$(which firejail)
+FIREJAIL_FEATUES="--caps.drop=all --seccomp --ipc-namespace \
+--overlay-tmpfs --private-dev --private-tmp"
 NC=$(which nc)
 IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
@@ -19,9 +21,9 @@ function execute_command() {
 
   mkfifo "$PWD/network-$uuid"
   ($NC -l -p 9999 < "$PWD/network-$uuid" > "$dest") &
-  $FIREJAIL --caps.drop=all --seccomp --shell=bash --ipc-namespace \
-    --overlay-tmpfs --private-dev --private-tmp \
+  $FIREJAIL "$FIREJAIL_FEATUES" \
     -c "$cmd && cat $file | nc localhost 9999 > $PWD/network-$uuid"
+  killall nc
   rm "$PWD/network-$uuid"
 }
 
@@ -29,7 +31,7 @@ function is_x86_layout() {
   local src="$1"
   local result=""
 
-  execute_command "$IFDTOOL -f $src && echo $?" "$SECURE_EXTRACT_DIR/result" "result"
+  execute_command "$IFDTOOL -f $src && echo $? > result" "$SECURE_EXTRACT_DIR/result" "result"
   result=$(cat "$SECURE_EXTRACT_DIR/result")
   if "$result" == "1" ; then
     return 0

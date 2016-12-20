@@ -1,3 +1,4 @@
+SHELL=/bin/bash
 TOOLS_DIR = $(PWD)/bin
 PACKAGES = automake autoconf make qt4-qmake build-essential libpci-dev libqt4-dev python3 firejail
 MAKE_DIRS	= tools/fcode-utils tools/flashrom/util/ich_descriptors_tool
