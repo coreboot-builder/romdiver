@@ -53,8 +53,8 @@ function disable_me() {
 function get_vgabios_name() {
   local src="$1"
 
-  execute_command "echo \"VGABIOS_NAME=pci\" > vgabios_pci.name && $ROM_HEADERS $src | grep 'Vendor ID:' | cut -d ':' -f 2 | tr -d '[:space:]' >> vgabios_pci.name && \
-  echo \",\" >> vgabios_pci.name && $ROM_HEADERS $src | grep 'Device ID:' | cut -d ':' -f 2 | tr -d '[:space:]' >> vgabios_pci.name && echo \".rom\" >> vgabios_pci.name" \
+  execute_command "echo -n \"VGABIOS_NAME=pci\" > vgabios_pci.name && $ROM_HEADERS $src | grep 'Vendor ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && \
+  echo -n \",\" >> vgabios_pci.name && $ROM_HEADERS $src | grep 'Device ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && echo \".rom\" >> vgabios_pci.name" \
   "$SECURE_EXTRACT_DIR/vgabios_pci.name" "vgabios_pci.name"
 }
 
@@ -75,13 +75,15 @@ function extract_vgabios() {
   IFS=$'\n'
   for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
   do
-    file=$(basename "${p// /\\ }")
+    file="${p// /\\ }"
     execute_command "$UEFI_EXTRACT $src dump" "$SECURE_EXTRACT_DIR/vgabios.bin" "$file"
     get_vgabios_name "$SECURE_EXTRACT_DIR/vgabios.bin"
     source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
     rm "$SECURE_EXTRACT_DIR/vgabios_pci.name"
-    cp "$SECURE_EXTRACT_DIR/vgabios.bin" "$SECURE_EXTRACT_DIR/$VGABIOS_NAME"
+    mv "$SECURE_EXTRACT_DIR/vgabios.bin" "$SECURE_EXTRACT_DIR/$VGABIOS_NAME"
   done
+
+  rm "$SECURE_EXTRACT_DIR/vgabios.list"
 }
 
 mkdir -p "$SECURE_EXTRACT_DIR"
