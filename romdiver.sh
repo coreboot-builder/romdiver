@@ -75,7 +75,7 @@ function extract_vgabios() {
   IFS=$'\n'
   for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
   do
-    file=$(basename "$p")
+    file=$(basename "${p// /\\ }")
     execute_command "$UEFI_EXTRACT $src dump" "$SECURE_EXTRACT_DIR/vgabios.bin" "$file"
     get_vgabios_name "$SECURE_EXTRACT_DIR/vgabios.bin"
     source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
