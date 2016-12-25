@@ -8,6 +8,8 @@ ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
 
+set -ex
+
 function execute_command() {
   local cmd="$1"
   local dest="$2"
@@ -30,9 +32,11 @@ function is_x86_layout() {
   execute_command "$IFDTOOL -f $src && echo $? > result" "$SECURE_EXTRACT_DIR/result" "result"
   result=$(cat "$SECURE_EXTRACT_DIR/result")
   if [ "$result" == "1" ] ; then
+    rm "$SECURE_EXTRACT_DIR/result"
     return 0
   fi
 
+  rm "$SECURE_EXTRACT_DIR/result"
   return 1
 }
 
@@ -85,14 +89,14 @@ function extract_vgabios() {
   rm "$SECURE_EXTRACT_DIR/vgabios.list"
 }
 
-if ( ! getopts "rx:dh" opt); then
+if ( ! getopts "r:x:dh" opt); then
 	echo "Usage: `basename $0` options (-d disable Management Engine) (-r rom.bin) (-x extract directory) -h for help";
 	exit $E_OPTERROR;
 fi
 
-while getopts "rx:dh" opt; do
+while getopts "r:x:dh" opt; do
      case $opt in
-         d) export DISABLE_ME=true ;;
+         d) export DISABLE_ME=1 ;;
          r) export ROM_FILE="$OPTARG" ;;
          x) export SECURE_EXTRACT_DIR="$OPTARG" ;;
      esac
