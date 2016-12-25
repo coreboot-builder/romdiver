@@ -71,23 +71,18 @@ function extract_vgabios() {
   local src="$1"
   local pattern="$2"
 
-  execute_command "$UEFI_EXTRACT $src dump && grep -rl \"$pattern\" uefi.bin.dump > vgabios.list" "$SECURE_EXTRACT_DIR/vgabios.list" "vgabios.list"
-  IFS=$'\n'
-  for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
-  do
-    rename "s/ /_/g" '$p'
-  done
-
-  execute_command "grep -rl \"$pattern\" uefi.bin.dump > vgabios.list" "$SECURE_EXTRACT_DIR/vgabios.list" "vgabios.list"
-  IFS=$'\n'
-  for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
-  do
-    file=$(basename "$p")
-    get_vgabios_name "$file"
-    source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
-    rm "$SECURE_EXTRACT_DIR/vgabios_pci.name"
-    cp "$file" "$SECURE_EXTRACT_DIR/$VGABIOS_NAME"
-  done
+  execute_command "export IFS=$'\n' && $UEFI_EXTRACT $src dump && grep -rl \"$pattern\" uefi.bin.dump > \
+  vgabios.list && for p in $(cat \"$SECURE_EXTRACT_DIR/vgabios.list\") do file=$(basename \"$p\"); get_vgabios_name \"$file\"; done" \
+  "$SECURE_EXTRACT_DIR/vgabios.list" "vgabios.list"
+  #IFS=$'\n'
+  #for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
+  #do
+#    file=$(basename "$p")
+    #get_vgabios_name "$file"
+    #source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
+    #rm "$SECURE_EXTRACT_DIR/vgabios_pci.name"
+    #cp "$file" "$SECURE_EXTRACT_DIR/$VGABIOS_NAME"
+  #done
 }
 
 mkdir -p "$SECURE_EXTRACT_DIR"
