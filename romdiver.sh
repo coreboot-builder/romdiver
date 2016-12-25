@@ -8,6 +8,8 @@ IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
+DISABLE_ME=false
+ROM_FILE="rom.bin"
 
 function execute_command() {
   local cmd="$1"
@@ -20,7 +22,7 @@ function execute_command() {
   $FIREJAIL --caps.drop=all --seccomp --ipc-namespace \
     --overlay-tmpfs --private-dev --private-tmp \
     -c "$cmd && cat $file | nc 127.0.0.1 9999 > $PWD/network-$uuid"
-  killall -q nc
+  killall -9 -q nc
   rm "$PWD/network-$uuid"
 }
 
@@ -86,6 +88,26 @@ function extract_vgabios() {
   rm "$SECURE_EXTRACT_DIR/vgabios.list"
 }
 
-mkdir -p "$SECURE_EXTRACT_DIR"
-extract_x86_blobs "$1"
-extract_vgabios "$SECURE_EXTRACT_DIR/uefi.bin" "VGA Compatible"
+if ( ! getopts "rx:dh" opt); then
+	echo "Usage: `basename $0` options (-d disable Management Engine) (-r rom.bin) (-x extract directory) -h for help";
+	exit $E_OPTERROR;
+fi
+
+while getopts "rx:dh" opt; do
+     case $opt in
+         d) DISABLE_ME=true ;;
+         r) ROM_FILE="$OPTARG" ;;
+         x) SECURE_EXTRACT_DIR="$OPTARG" ;;
+     esac
+done
+
+if [ -d "$SECURE_EXTRACT_DIR" ] ; then
+  if is_x86_layout "$ROM_FILE" ; then
+    get_real_mac "$ROM_FILE"
+    extract_x86_blobs "$ROM_FILE"
+    if DISABLE_ME ; then
+      disable_me
+    fi
+    extract_vgabios "$SECURE_EXTRACT_DIR/uefi.bin" "VGA Compatible"
+  fi
+fi
