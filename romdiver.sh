@@ -104,7 +104,7 @@ done
 
 if [ -d "$SECURE_EXTRACT_DIR" ] ; then
   is_new_x86_layout "$ROM_FILE"
-  if $? -ne 0 ; then
+  if $? -eq 0 ; then
     get_real_mac "$ROM_FILE"
     extract_x86_blobs "$ROM_FILE"
     if DISABLE_ME ; then
