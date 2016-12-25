@@ -75,10 +75,10 @@ function extract_vgabios() {
   IFS=$'\n'
   for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
   do
-    rename "s/ /_/g" "$p"
+    rename "s/ /_/g" '$p'
   done
 
-  execute_command "$UEFI_EXTRACT $src dump && grep -rl \"$pattern\" uefi.bin.dump > vgabios.list" "$SECURE_EXTRACT_DIR/vgabios.list" "vgabios.list"
+  execute_command "grep -rl \"$pattern\" uefi.bin.dump > vgabios.list" "$SECURE_EXTRACT_DIR/vgabios.list" "vgabios.list"
   IFS=$'\n'
   for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
   do
