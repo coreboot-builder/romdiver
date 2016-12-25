@@ -1,6 +1,5 @@
 #!/bin/bash
 
-SECURE_EXTRACT_DIR="$PWD/tmp"
 TOOLS_DIR="$PWD/bin"
 FIREJAIL=$(which firejail)
 NC=$(which nc)
@@ -8,8 +7,6 @@ IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
-DISABLE_ME=false
-ROM_FILE="rom.bin"
 
 function execute_command() {
   local cmd="$1"
@@ -95,9 +92,9 @@ fi
 
 while getopts "rx:dh" opt; do
      case $opt in
-         d) DISABLE_ME=true ;;
-         r) ROM_FILE="$OPTARG" ;;
-         x) SECURE_EXTRACT_DIR="$OPTARG" ;;
+         d) export DISABLE_ME=true ;;
+         r) export ROM_FILE="$OPTARG" ;;
+         x) export SECURE_EXTRACT_DIR="$OPTARG" ;;
      esac
 done
 
