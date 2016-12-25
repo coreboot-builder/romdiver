@@ -16,13 +16,13 @@ function execute_command() {
   local file="$3"
   local uuid=$(uuidgen)
 
-  mkfifo "$PWD/network-$uuid"
+  mkfifo "/tmp/network-$uuid"
   ($NC -l 127.0.0.1 9999 < "$PWD/network-$uuid" > "$dest") &
   $FIREJAIL --caps.drop=all --seccomp --ipc-namespace \
     --overlay-tmpfs --private-dev --private-tmp \
-    -c "$cmd && cat $file | nc 127.0.0.1 9999 > $PWD/network-$uuid"
+    -c "$cmd && cat $file | nc 127.0.0.1 9999 > /tmp/network-$uuid"
   killall -9 -q nc
-  rm "$PWD/network-$uuid"
+  rm "/tmp/network-$uuid"
 }
 
 function is_new_x86_layout() {
@@ -104,7 +104,7 @@ done
 
 if [ -d "$SECURE_EXTRACT_DIR" ] ; then
   is_new_x86_layout "$ROM_FILE"
-  if $? ; then
+  if $? -ne 0 ; then
     get_real_mac "$ROM_FILE"
     extract_x86_blobs "$ROM_FILE"
     if DISABLE_ME ; then
