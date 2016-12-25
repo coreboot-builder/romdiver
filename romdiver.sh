@@ -16,10 +16,10 @@ function execute_command() {
   local uuid=$(uuidgen)
 
   mkfifo "$PWD/network-$uuid"
-  ($NC -s localhost -l -p 9999 < "$PWD/network-$uuid" > "$dest") &
+  ($NC -l 127.0.0.1 9999 < "$PWD/network-$uuid" > "$dest") &
   $FIREJAIL --caps.drop=all --seccomp --ipc-namespace \
     --overlay-tmpfs --private-dev --private-tmp \
-    -c "$cmd && cat $file | nc localhost 9999 > $PWD/network-$uuid"
+    -c "$cmd && cat $file | nc 127.0.0.1 9999 > $PWD/network-$uuid"
   killall -q nc
   rm "$PWD/network-$uuid"
 }
