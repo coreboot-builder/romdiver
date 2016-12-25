@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SECURE_EXTRACT_DIR="$PWD/tmp"
-ETHERNET_DEV="eth0"
 TOOLS_DIR="$PWD/bin"
 FIREJAIL=$(which firejail)
 NC=$(which nc)
@@ -76,11 +75,14 @@ function extract_vgabios() {
   IFS=$'\n'
   for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
   do
-    get_vgabios_name "$file"
-    source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
-    rm "$SECURE_EXTRACT_DIR/vgabios_pci.name"
-    cp "$file" "$SECURE_EXTRACT_DIR/$VGABIOS_NAME"
+    echo $p
+    #get_vgabios_name "$file"
+    #source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
+    #rm "$SECURE_EXTRACT_DIR/vgabios_pci.name"
+    #cp "$file" "$SECURE_EXTRACT_DIR/$VGABIOS_NAME"
   done
 }
 
 mkdir -p "$SECURE_EXTRACT_DIR"
+extract_x86_blobs "$1"
+extract_vgabios "$SECURE_EXTRACT_DIR/uefi.bin" "VGA Compatible BIOS"
