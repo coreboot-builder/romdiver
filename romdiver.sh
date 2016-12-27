@@ -7,6 +7,9 @@ IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
+SECURE_EXTRACT_DIR=""
+ROM_FILE=""
+DISABLE_ME=0
 
 set -e
 
@@ -34,10 +37,10 @@ function is_new_x86_layout() {
   if [ "$result" == "1" ] ; then
     rm "$SECURE_EXTRACT_DIR/result"
     return 0
+  else
+    rm "$SECURE_EXTRACT_DIR/result"
+    return 1
   fi
-
-  rm "$SECURE_EXTRACT_DIR/result"
-  return 1
 }
 
 function get_real_mac() {
