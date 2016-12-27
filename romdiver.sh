@@ -8,7 +8,7 @@ ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
 
-set -ex
+set -e
 
 function execute_command() {
   local cmd="$1"
@@ -75,8 +75,7 @@ function extract_vgabios() {
   local pattern="$2"
 
   execute_command "$UEFI_EXTRACT $src dump && grep -rl \"$pattern\" uefi.bin.dump > vgabios.list" "$SECURE_EXTRACT_DIR/vgabios.list" "vgabios.list"
-  IFS=$'\n'
-  for p in $(cat "$SECURE_EXTRACT_DIR/vgabios.list")
+  while IFS=$'\n' read -r p < "$SECURE_EXTRACT_DIR/vgabios.list"
   do
     file="${p// /\\ }"
     execute_command "$UEFI_EXTRACT $src dump" "$SECURE_EXTRACT_DIR/vgabios.bin" "$file"
@@ -90,8 +89,8 @@ function extract_vgabios() {
 }
 
 if ( ! getopts "r:x:dh" opt); then
-	echo "Usage: `basename $0` options (-d disable Management Engine) (-r rom.bin) (-x extract directory) -h for help";
-	exit $E_OPTERROR;
+	echo "Usage: $(basename "$0") options (-d disable Management Engine) (-r rom.bin) (-x extract directory) -h for help";
+	exit $E_OPTERROR
 fi
 
 while getopts "r:x:dh" opt; do
@@ -103,8 +102,7 @@ while getopts "r:x:dh" opt; do
 done
 
 if [ -d "$SECURE_EXTRACT_DIR" ] ; then
-  is_new_x86_layout "$ROM_FILE"
-  if $? -eq 0 ; then
+  if is_new_x86_layout "$ROM_FILE" ; then
     get_real_mac "$ROM_FILE"
     extract_x86_blobs "$ROM_FILE"
     if DISABLE_ME ; then
