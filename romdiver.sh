@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOOLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")/bin"
+TOOLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/bin)"
 IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
