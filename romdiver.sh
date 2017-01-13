@@ -77,11 +77,11 @@ function extract_vgabios() {
   done
 
   rm vgabios.list
-  rm "$(basename "$src.dump")"
+  rm -rf "$(basename "$src.dump")"
 }
 
 if ( ! getopts "r:x:dh" opt); then
-	echo "Usage: $(basename "$0") options (-d disable Management Engine) (-r rom.bin) -h for help";
+	echo "Usage: $(basename "$0") options (-d disable Management Engine) (-r rom.bin) (-x output dir) -h for help";
 	exit $E_OPTERROR
 fi
 
@@ -94,7 +94,7 @@ while getopts "r:x:dh" opt; do
 done
 
 is_new_x86_layout "$ROM_FILE"
-if [ "$?" == "1" ] ; then
+if [ $? == 1 ] ; then
   get_real_mac "$ROM_FILE"
   extract_x86_blobs "$ROM_FILE"
   if [ "$DISABLE_ME" == "1" ] ; then
