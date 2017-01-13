@@ -9,6 +9,7 @@ UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
 ROM_FILE=""
 OUTPUT_DIR=""
 DISABLE_ME=0
+USER="jenkins"
 
 set -ex
 
@@ -23,6 +24,7 @@ function get_real_mac() {
 
   $IFDTOOL -f "$src" | awk -F: -v key="The MAC address might be at offset 0x1000" \
   '\$1==key {printf(\"%s:%s:%s:%s:%s:%s\", \$2, \$3, \$4, \$5, \$6, \$7)}' | tr -d '[:space:]' > $OUTPUT_DIR/macaddress
+  chown "$USER:" "$OUTPUT_DIR/macaddress"
 }
 
 function disable_me() {
@@ -45,9 +47,13 @@ function extract_x86_blobs() {
 
   $IFDTOOL -d -f "$src"
   mv "$src.BIOS.bin" "$OUTPUT_DIR/uefi.bin"
+  chown "$USER:" "$OUTPUT_DIR/uefi.bin"
   mv "$src.ME.bin" "$OUTPUT_DIR/me.bin"
+  chown "$USER:" "$OUTPUT_DIR/me.bin"
   mv "$src.GbE.bin" "$OUTPUT_DIR/gbe.bin"
+  chown "$USER:" "$OUTPUT_DIR/gbe.bin"
   mv "$src.Descriptor.bin" "$OUTPUT_DIR/descriptor.bin"
+  chown "$USER:" "$OUTPUT_DIR/descriptor.bin"
 }
 
 function extract_vgabios() {
@@ -64,6 +70,7 @@ function extract_vgabios() {
     source vgabios_pci.name
     rm vgabios_pci.name
     mv vgabios.bin "$OUTPUT_DIR/$VGABIOS_NAME"
+    chown "$USER:" "$OUTPUT_DIR/$VGABIOS_NAME"
     sed -i '1d' vgabios.list
   done
 
