@@ -1,35 +1,26 @@
 #!/bin/bash
 
 TOOLS_DIR="$PWD/bin"
-ENCAPSULATE=$(which encapsulate)
 IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
-SECURE_EXTRACT_DIR=""
 ROM_FILE=""
 DISABLE_ME=0
 
 set -e
 
-function execute_command() {
-  local cmd="$1"
-  local file="$2"
-
-  $ENCAPSULATE $SECURE_EXTRACT_DIR sh -x -c "cd /tmp && $cmd && cp $file $SECURE_EXTRACT_DIR"
-}
-
 function is_new_x86_layout() {
   local src="$1"
   local ret=""
 
-  execute_command "$IFDTOOL -f $src && echo $? > result" "result"
-  ret=$(cat "$SECURE_EXTRACT_DIR/result")
+  $IFDTOOL -f "$src" && echo $? > result
+  ret=$(cat result)
   if [ "$ret" == "1" ] ; then
-    rm "$SECURE_EXTRACT_DIR/result"
+    rm "result"
     return 0
   else
-    rm "$SECURE_EXTRACT_DIR/result"
+    rm "result"
     return 1
   fi
 }
@@ -37,42 +28,40 @@ function is_new_x86_layout() {
 function get_real_mac() {
   local src="$1"
 
-  execute_command "$IFDTOOL -f $src | awk -F: -v key=\"The MAC address might be at offset 0x1000\" \
-  '\$1==key {printf(\"%s:%s:%s:%s:%s:%s\", \$2, \$3, \$4, \$5, \$6, \$7)}' | tr -d '[:space:]' > macaddress" "macaddress"
+  $IFDTOOL -f "$src" | awk -F: -v key=\"The MAC address might be at offset 0x1000\" \
+  '\$1==key {printf(\"%s:%s:%s:%s:%s:%s\", \$2, \$3, \$4, \$5, \$6, \$7)}' | tr -d '[:space:]' > macaddress
 }
 
 function disable_me() {
-  if [ -f "$SECURE_EXTRACT_DIR/me.bin" ] ; then
-    execute_command "$ME_CLEANER $SECURE_EXTRACT_DIR/me.bin" "me.bin"
+  local src="$1"
+
+  if [ -f "$src" ] ; then
+    $ME_CLEANER "$src"
   fi
 }
 
 function get_vgabios_name() {
   local src="$1"
 
-  execute_command "echo -n \"VGABIOS_NAME=pci\" > vgabios_pci.name && $ROM_HEADERS $src | grep 'Vendor ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && \
-  echo -n \",\" >> vgabios_pci.name && $ROM_HEADERS $src | grep 'Device ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && echo \".rom\" >> vgabios_pci.name" \
-  "vgabios_pci.name"
+  echo -n \"VGABIOS_NAME=pci\" > vgabios_pci.name && "$ROM_HEADERS" "$src" | grep 'Vendor ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && \
+  echo -n \",\" >> vgabios_pci.name && "$ROM_HEADERS" "$src" | grep 'Device ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && echo \".rom\" >> vgabios_pci.name
 }
 
 function extract_x86_blobs() {
   local src="$1"
 
-  execute_command "$IFDTOOL -d -f $src" "$src.Descriptor.bin"
-  execute_command "$IFDTOOL -d -f $src" "$src.ME.bin"
-  execute_command "$IFDTOOL -d -f $src" "$src.GbE.bin"
-  execute_command "$IFDTOOL -d -f $src" "$src.BIOS.bin"
+  $IFDTOOL -d -f "$src"
 }
 
 function extract_vgabios() {
   local src="$1"
   local pattern="$2"
 
-  execute_command "$UEFI_EXTRACT $src dump && grep -rl \"$pattern\" uefi.bin.dump > vgabios.list" "vgabios.list"
-  while IFS=$'\n' read -r p < "$SECURE_EXTRACT_DIR/vgabios.list"
+  $UEFI_EXTRACT "$src" dump && grep -rl \""$pattern"\" uefi.bin.dump > vgabios.list
+  while IFS=$'\n' read -r p < vgabios.list
   do
     file="${p// /\\ }"
-    execute_command "$UEFI_EXTRACT $src dump" "$file"
+    $UEFI_EXTRACT "$src" dump
     get_vgabios_name "$SECURE_EXTRACT_DIR/vgabios.bin"
     source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
     rm "$SECURE_EXTRACT_DIR/vgabios_pci.name"
@@ -100,7 +89,7 @@ if [ -d "$SECURE_EXTRACT_DIR" ] ; then
     get_real_mac "$ROM_FILE"
     extract_x86_blobs "$ROM_FILE"
     if DISABLE_ME ; then
-      disable_me
+      disable_me "$ROM_FILE.ME.bin"
     fi
     extract_vgabios "$SECURE_EXTRACT_DIR/uefi.bin" "VGA Compatible"
   fi
