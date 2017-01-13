@@ -5,10 +5,12 @@ IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
+
 ROM_FILE=""
+OUTPUT_DIR=""
 DISABLE_ME=0
 
-set -e
+set -ex
 
 function is_new_x86_layout() {
   local src="$1"
@@ -28,8 +30,8 @@ function is_new_x86_layout() {
 function get_real_mac() {
   local src="$1"
 
-  $IFDTOOL -f "$src" | awk -F: -v key=\"The MAC address might be at offset 0x1000\" \
-  '\$1==key {printf(\"%s:%s:%s:%s:%s:%s\", \$2, \$3, \$4, \$5, \$6, \$7)}' | tr -d '[:space:]' > macaddress
+  $IFDTOOL -f "$src" | awk -F: -v key="The MAC address might be at offset 0x1000" \
+  '\$1==key {printf(\"%s:%s:%s:%s:%s:%s\", \$2, \$3, \$4, \$5, \$6, \$7)}' | tr -d '[:space:]' > $OUTPUT_DIR/macaddress
 }
 
 function disable_me() {
@@ -51,6 +53,10 @@ function extract_x86_blobs() {
   local src="$1"
 
   $IFDTOOL -d -f "$src"
+  mv "$src.BIOS.bin" "$OUTPUT_DIR/uefi.bin"
+  mv "$src.ME.bin" "$OUTPUT_DIR/me.bin"
+  mv "$src.GbE.bin" "$OUTPUT_DIR/gbe.bin"
+  mv "$src.Descriptor.bin" "$OUTPUT_DIR/descriptor.bin"
 }
 
 function extract_vgabios() {
@@ -66,29 +72,33 @@ function extract_vgabios() {
     get_vgabios_name vgabios.bin
     source vgabios_pci.name
     rm vgabios_pci.name
-    mv vgabios.bin "$VGABIOS_NAME"
+    mv vgabios.bin "$OUTPUT_DIR/$VGABIOS_NAME"
+    sed -i '1d' vgabios.list
   done
 
   rm vgabios.list
+  rm "$(basename "$src.dump")"
 }
 
-if ( ! getopts "r:dh" opt); then
+if ( ! getopts "r:x:dh" opt); then
 	echo "Usage: $(basename "$0") options (-d disable Management Engine) (-r rom.bin) -h for help";
 	exit $E_OPTERROR
 fi
 
-while getopts "r:dh" opt; do
+while getopts "r:x:dh" opt; do
      case $opt in
          d) export DISABLE_ME=1 ;;
          r) export ROM_FILE="$OPTARG" ;;
+         x) export OUTPUT_DIR="$OPTARG" ;;
      esac
 done
 
-if is_new_x86_layout "$ROM_FILE" ; then
+is_new_x86_layout "$ROM_FILE"
+if [ "$?" == "1" ] ; then
   get_real_mac "$ROM_FILE"
   extract_x86_blobs "$ROM_FILE"
   if [ "$DISABLE_ME" == "1" ] ; then
-    disable_me "$ROM_FILE.ME.bin"
+    disable_me "$OUTPUT_DIR/me.bin"
   fi
-  extract_vgabios "$ROM_FILE.BIOS.bin" "VGA Compatible"
+  extract_vgabios "$OUTPUT_DIR/uefi.bin" "VGA Compatible"
 fi
