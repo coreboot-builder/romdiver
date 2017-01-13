@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOOLS_DIR="$PWD/bin"
+TOOLS_DIR="$(pwd)/bin"
 IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
