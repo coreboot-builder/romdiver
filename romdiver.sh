@@ -1,8 +1,7 @@
 #!/bin/bash
 
 TOOLS_DIR="$PWD/bin"
-FIREJAIL=$(which firejail)
-NC=$(which nc)
+ENCAPSULATE=$(which encapsulate)
 IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
@@ -17,24 +16,17 @@ function execute_command() {
   local cmd="$1"
   local dest="$2"
   local file="$3"
-  local uuid=$(uuidgen)
 
-  mkfifo "/tmp/network-$uuid"
-  ($NC -l 127.0.0.1 9999 < "/tmp/network-$uuid" > "$dest") &
-  $FIREJAIL --caps.drop=all --seccomp --ipc-namespace \
-    --overlay-tmpfs --private-dev --private-tmp \
-    -c "$cmd && cat $file | nc 127.0.0.1 9999 > /tmp/network-$uuid"
-  killall -9 -q nc
-  rm "/tmp/network-$uuid"
+  $ENCAPSULATE $SECURE_EXTRACT_DIR sh -x -c "$cmd && cp $file $dest"
 }
 
 function is_new_x86_layout() {
   local src="$1"
-  local result=""
+  local ret=""
 
   execute_command "$IFDTOOL -f $src && echo $? > result" "$SECURE_EXTRACT_DIR/result" "result"
-  result=$(cat "$SECURE_EXTRACT_DIR/result")
-  if [ "$result" == "1" ] ; then
+  ret=$(cat "$SECURE_EXTRACT_DIR/result")
+  if [ "$ret" == "1" ] ; then
     rm "$SECURE_EXTRACT_DIR/result"
     return 0
   else
