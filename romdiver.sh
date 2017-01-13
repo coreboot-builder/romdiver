@@ -14,17 +14,8 @@ set -ex
 
 function is_new_x86_layout() {
   local src="$1"
-  local ret=""
 
-  $IFDTOOL -f "$src" && echo $? > result
-  ret=$(cat result)
-  if [ "$ret" == "1" ] ; then
-    rm "result"
-    return 0
-  else
-    rm "result"
-    return 1
-  fi
+  $IFDTOOL -f "$src"
 }
 
 function get_real_mac() {
@@ -93,8 +84,7 @@ while getopts "r:x:dh" opt; do
      esac
 done
 
-is_new_x86_layout "$ROM_FILE"
-if [ $? == 1 ] ; then
+if is_new_x86_layout "$ROM_FILE" ; then
   get_real_mac "$ROM_FILE"
   extract_x86_blobs "$ROM_FILE"
   if [ "$DISABLE_ME" == "1" ] ; then
