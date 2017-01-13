@@ -43,8 +43,8 @@ function disable_me() {
 function get_vgabios_name() {
   local src="$1"
 
-  echo -n \"VGABIOS_NAME=pci\" > vgabios_pci.name && "$ROM_HEADERS" "$src" | grep 'Vendor ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && \
-  echo -n \",\" >> vgabios_pci.name && "$ROM_HEADERS" "$src" | grep 'Device ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e \"s/^0x//\" >> vgabios_pci.name && echo \".rom\" >> vgabios_pci.name
+  echo -n "VGABIOS_NAME=pci" > vgabios_pci.name && "$ROM_HEADERS" "$src" | grep 'Vendor ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e "s/^0x//" >> vgabios_pci.name && \
+  echo -n "," >> vgabios_pci.name && "$ROM_HEADERS" "$src" | grep 'Device ID:' | cut -d ':' -f 2 | tr -d '[:space:]' | sed -e "s/^0x//" >> vgabios_pci.name && echo ".rom" >> vgabios_pci.name
 }
 
 function extract_x86_blobs() {
@@ -57,11 +57,12 @@ function extract_vgabios() {
   local src="$1"
   local pattern="$2"
 
-  $UEFI_EXTRACT "$src" dump && grep -rl \""$pattern"\" uefi.bin.dump > vgabios.list
-  while IFS=$'\n' read -r p < vgabios.list
+  $UEFI_EXTRACT "$src" dump
+  grep -rl "$pattern" "$(basename "$src.dump")" > vgabios.list
+
+  while IFS='\n' read -r p < vgabios.list
   do
-    file="${p// /\\ }"
-    $UEFI_EXTRACT "$src" dump
+    cp "$p" vgabios.bin
     get_vgabios_name vgabios.bin
     source vgabios_pci.name
     rm vgabios_pci.name
@@ -86,8 +87,8 @@ done
 if is_new_x86_layout "$ROM_FILE" ; then
   get_real_mac "$ROM_FILE"
   extract_x86_blobs "$ROM_FILE"
-  if DISABLE_ME ; then
+  if [ "$DISABLE_ME" == "1" ] ; then
     disable_me "$ROM_FILE.ME.bin"
   fi
-  extract_vgabios "$ROM_FILE.UEFI.bin" "VGA Compatible"
+  extract_vgabios "$ROM_FILE.BIOS.bin" "VGA Compatible"
 fi
