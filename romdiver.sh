@@ -62,35 +62,32 @@ function extract_vgabios() {
   do
     file="${p// /\\ }"
     $UEFI_EXTRACT "$src" dump
-    get_vgabios_name "$SECURE_EXTRACT_DIR/vgabios.bin"
-    source "$SECURE_EXTRACT_DIR/vgabios_pci.name"
-    rm "$SECURE_EXTRACT_DIR/vgabios_pci.name"
-    mv "$SECURE_EXTRACT_DIR/vgabios.bin" "$SECURE_EXTRACT_DIR/$VGABIOS_NAME"
+    get_vgabios_name vgabios.bin
+    source vgabios_pci.name
+    rm vgabios_pci.name
+    mv vgabios.bin "$VGABIOS_NAME"
   done
 
-  rm "$SECURE_EXTRACT_DIR/vgabios.list"
+  rm vgabios.list
 }
 
-if ( ! getopts "r:x:dh" opt); then
-	echo "Usage: $(basename "$0") options (-d disable Management Engine) (-r rom.bin) (-x extract directory) -h for help";
+if ( ! getopts "r:dh" opt); then
+	echo "Usage: $(basename "$0") options (-d disable Management Engine) (-r rom.bin) -h for help";
 	exit $E_OPTERROR
 fi
 
-while getopts "r:x:dh" opt; do
+while getopts "r:dh" opt; do
      case $opt in
          d) export DISABLE_ME=1 ;;
          r) export ROM_FILE="$OPTARG" ;;
-         x) export SECURE_EXTRACT_DIR="$OPTARG" ;;
      esac
 done
 
-if [ -d "$SECURE_EXTRACT_DIR" ] ; then
-  if is_new_x86_layout "$ROM_FILE" ; then
-    get_real_mac "$ROM_FILE"
-    extract_x86_blobs "$ROM_FILE"
-    if DISABLE_ME ; then
-      disable_me "$ROM_FILE.ME.bin"
-    fi
-    extract_vgabios "$SECURE_EXTRACT_DIR/uefi.bin" "VGA Compatible"
+if is_new_x86_layout "$ROM_FILE" ; then
+  get_real_mac "$ROM_FILE"
+  extract_x86_blobs "$ROM_FILE"
+  if DISABLE_ME ; then
+    disable_me "$ROM_FILE.ME.bin"
   fi
+  extract_vgabios "$ROM_FILE.UEFI.bin" "VGA Compatible"
 fi
