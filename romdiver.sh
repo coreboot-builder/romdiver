@@ -45,15 +45,19 @@ function get_vgabios_name() {
 function extract_x86_blobs() {
   local src="$1"
 
-  $IFDTOOL -d -f "$src"
-  mv "$src.BIOS.bin" "$OUTPUT_DIR/uefi.bin"
+  cp "$src" "$OUTPUT_DIR/rom.bin"
+  $IFDTOOL -d -f "$OUTPUT_DIR/rom.bin"
+
+  mv "$OUTPUT_DIR/rom.bin.BIOS.bin" "$OUTPUT_DIR/uefi.bin"
   chown "$USER:" "$OUTPUT_DIR/uefi.bin"
-  mv "$src.ME.bin" "$OUTPUT_DIR/me.bin"
+  mv "$OUTPUT_DIR/rom.bin.ME.bin" "$OUTPUT_DIR/me.bin"
   chown "$USER:" "$OUTPUT_DIR/me.bin"
-  mv "$src.GbE.bin" "$OUTPUT_DIR/gbe.bin"
+  mv "$OUTPUT_DIR/rom.bin.GbE.bin" "$OUTPUT_DIR/gbe.bin"
   chown "$USER:" "$OUTPUT_DIR/gbe.bin"
-  mv "$src.Descriptor.bin" "$OUTPUT_DIR/descriptor.bin"
+  mv "$OUTPUT_DIR/rom.bin.Descriptor.bin" "$OUTPUT_DIR/descriptor.bin"
   chown "$USER:" "$OUTPUT_DIR/descriptor.bin"
+
+  rm "$OUTPUT_DIR/rom.bin"
 }
 
 function extract_vgabios() {
