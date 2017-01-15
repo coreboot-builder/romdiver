@@ -7,9 +7,16 @@ MAKE_TOOLS =  ich_descriptors_tool romheaders
 QMAKE_TOOLS = UEFIExtract
 BIN_TOOLS = tools/me-cleaner/me_cleaner.py
 
-all :  utils
+OS := $(shell gawk -F= '/^NAME/{print $2}' /etc/os-release)
 
-deps : sudo apt-get install $(PACKAGES)
+all : deps submodules utils
+
+submodules: git submodule update --checkout --init
+
+deps :
+	if [ "$(OS)" = "NAME=Ubuntu" ]; then \
+		sudo apt-get install $(PACKAGES); \
+	fi
 
 utils :
 	mkdir $(TOOLS_DIR) || true

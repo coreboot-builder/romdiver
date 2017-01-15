@@ -9,7 +9,7 @@ UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
 ROM_FILE=""
 OUTPUT_DIR=""
 DISABLE_ME=0
-USER="jenkins"
+USER=""
 
 set -ex
 
@@ -67,7 +67,7 @@ function extract_vgabios() {
   $UEFI_EXTRACT "$src" dump
   grep -rl "$pattern" "$(basename "$src.dump")" > vgabios.list
 
-  while IFS='\n' read -r p < vgabios.list
+  while IFS=$'\n' read -r p < vgabios.list
   do
     cp "$p" vgabios.bin
     get_vgabios_name vgabios.bin
@@ -82,16 +82,17 @@ function extract_vgabios() {
   rm -rf "$(basename "$src.dump")"
 }
 
-if ( ! getopts "r:x:dh" opt); then
-	echo "Usage: $(basename "$0") options (-d disable Management Engine) (-r rom.bin) (-x output dir) -h for help";
+if ( ! getopts "r:x:u:dh" opt); then
+	echo "Usage: $(basename "$0") options ( -d disable Management Engine ) ( -r rom.bin ) ( -x output dir ) ( -u perms for user ) -h for help";
 	exit $E_OPTERROR
 fi
 
-while getopts "r:x:dh" opt; do
+while getopts "r:x:u:dh" opt; do
      case $opt in
          d) export DISABLE_ME=1 ;;
          r) export ROM_FILE="$OPTARG" ;;
          x) export OUTPUT_DIR="$OPTARG" ;;
+         u) export USER="$OPTARG" ;;
      esac
 done
 
