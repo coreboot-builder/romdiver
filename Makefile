@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 TOOLS_DIR = $(PWD)/bin
-PACKAGES = automake autoconf make qt4-qmake build-essential libpci-dev libqt4-dev python3 firejail
+PACKAGES = automake autoconf make qt4-qmake build-essential libpci-dev libqt4-dev python3
 MAKE_DIRS	= tools/fcode-utils tools/flashrom/util/ich_descriptors_tool
 QMAKE_DIRS = tools/uefitool/UEFIExtract tools/uefitool/UEFIFind
 MAKE_TOOLS =  ich_descriptors_tool romheaders
@@ -15,7 +15,7 @@ submodules: git submodule update --checkout --init
 
 deps :
 	if [ "$(OS)" = "NAME=Ubuntu" ]; then \
-		sudo apt-get install $(PACKAGES); \
+		sudo apt-get --yes --force-yes install $(PACKAGES); \
 	fi
 
 utils :
