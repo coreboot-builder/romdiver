@@ -9,16 +9,17 @@ BIN_TOOLS = tools/me-cleaner/me_cleaner.py
 
 OS := $(shell gawk -F= '/^NAME/{print $2}' /etc/os-release)
 
-all : deps submodules utils
+all: deps submodules utils
 
-submodules: git submodule update --checkout --init
+submodules:
+	git submodule update --checkout --init;
 
-deps :
+deps:
 	if [ "$(OS)" = "NAME=Ubuntu" ]; then \
 		sudo apt-get --yes --force-yes install $(PACKAGES); \
 	fi
 
-utils :
+utils:
 	mkdir $(TOOLS_DIR) || true
 	-for d in $(MAKE_DIRS); do ( \
 		cd $$d; $(MAKE); \
