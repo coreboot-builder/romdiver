@@ -6,6 +6,10 @@ ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
 
+INTEL_NVIDIA_PATTERN="VGA Compatible"
+GOP_DRIVER_PATTERN="IntelGopDriver"
+GOP_VBT_PATTERN="IntelGopVbt"
+
 ROM_FILE=""
 OUTPUT_DIR=""
 DISABLE_ME=0
@@ -82,6 +86,24 @@ function extract_vgabios() {
   rm -rf "$(basename "$src.dump")"
 }
 
+function extract_gop() {
+  local src="$1"
+  local gop_pattern="*$2*"
+  local vbt_pattern="*$3*"
+
+  $UEFI_EXTRACT "$src" dump
+
+  gop_root=$(find "$(basename "$src.dump")" -type d -name "$gop_pattern")
+  gop_file="$gop_root/0 PE32 image section/body.bin"
+  vbt_root=$(find "$(basename "$src.dump")" -type d -name "$vbt_pattern")
+  vbt_file="$vbt_root/0 Raw section/body.bin"
+
+  cp "$gop_file" "$OUTPUT_DIR/IntelGopDriver.efi"
+  cp "$vbt_file" "$OUTPUT_DIR/IntelGopVbt"
+
+  rm -rf "$(basename "$src.dump")"
+}
+
 if ( ! getopts "r:x:u:dh" opt); then
 	echo "Usage: $(basename "$0") options ( -d disable Management Engine ) ( -r rom.bin ) ( -x output dir ) ( -u perms for user ) -h for help";
 	exit $E_OPTERROR
@@ -102,5 +124,6 @@ if is_new_x86_layout "$ROM_FILE" ; then
   if [ "$DISABLE_ME" == "1" ] ; then
     disable_me "$OUTPUT_DIR/me.bin"
   fi
-  extract_vgabios "$OUTPUT_DIR/uefi.bin" "VGA Compatible"
+  extract_vgabios "$OUTPUT_DIR/uefi.bin" "$INTEL_NVIDIA_PATTERN"
+  extract_gop "$OUTPUT_DIR/uefi.bin" "$GOP_DRIVER_PATTERN" "$GOP_VBT_PATTERN"
 fi
