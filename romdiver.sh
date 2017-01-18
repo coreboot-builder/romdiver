@@ -15,7 +15,7 @@ OUTPUT_DIR=""
 DISABLE_ME=0
 USER=""
 
-set -ex
+set -x
 
 function is_new_x86_layout() {
   local src="$1"
