@@ -1,11 +1,12 @@
 SHELL=/bin/bash
 TOOLS_DIR = $(PWD)/bin
-PACKAGES = automake autoconf make qt4-qmake build-essential libpci-dev libqt4-dev python3
-MAKE_DIRS	= tools/fcode-utils tools/flashrom/util/ich_descriptors_tool
+UBUNTU_PACKAGES = automake autoconf make qt4-qmake build-essential libpci-dev libqt4-dev python3
+FEDORA_PACKAGES = qt-devel automake autoconf make python3 pciutils-devel
+MAKE_DIRS	= tools/fcode-utils tools/flashrom/util/ich_descriptors_tool tools/bios_extract
 QMAKE_DIRS = tools/uefitool/UEFIExtract tools/uefitool/UEFIFind
-MAKE_TOOLS =  ich_descriptors_tool romheaders
+MAKE_TOOLS =  ich_descriptors_tool romheaders bios_extract
 QMAKE_TOOLS = UEFIExtract
-BIN_TOOLS = tools/me-cleaner/me_cleaner.py
+BIN_TOOLS = tools/me-cleaner/me_cleaner.py tools/bios_extract/phoenix_extract.py
 
 OS := $(shell gawk -F= '/^NAME/{print $2}' /etc/os-release)
 
@@ -16,7 +17,10 @@ submodules:
 
 deps:
 	if [ "$(OS)" = "NAME=Ubuntu" ]; then \
-		sudo apt-get --yes --force-yes install $(PACKAGES); \
+		sudo apt-get --yes --force-yes install $(UBUNTU_PACKAGES); \
+	elif [ "$(OS)" = "NAME=Fedora" ]; then \
+		sudo dnf install -y @development-tools; \
+		sudo dnf install -y $(FEDORA_PACKAGES); \
 	fi
 
 utils:

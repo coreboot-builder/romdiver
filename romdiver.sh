@@ -5,10 +5,16 @@ IFDTOOL="$TOOLS_DIR/ich_descriptors_tool"
 ME_CLEANER="$TOOLS_DIR/me_cleaner.py"
 ROM_HEADERS="$TOOLS_DIR/romheaders"
 UEFI_EXTRACT="$TOOLS_DIR/uefiextract"
+BIOS_EXTRACT="$TOOLS_DIR/bios_extract"
+PHOENIX_EXTRACT="$TOOLS_DIR/phoenix_extract.py"
 
+OLD_VGABIOS_PATTERN="PCIR"
+INTEL_VGABIOS_PATTERN="pci8086,"
 INTEL_NVIDIA_PATTERN="VGA Compatible"
 GOP_DRIVER_PATTERN="IntelGopDriver"
 GOP_VBT_PATTERN="IntelGopVbt"
+
+declare -a INTEL_VGABIOS_DEVICE_ID_LIST=("0406" "0106")
 
 ROM_FILE=""
 OUTPUT_DIR=""
@@ -79,6 +85,14 @@ function extract_vgabios() {
     rm vgabios_pci.name
     mv vgabios.bin "$OUTPUT_DIR/$VGABIOS_NAME"
     chown "$USER:" "$OUTPUT_DIR/$VGABIOS_NAME"
+
+    if [[ "$VGABIOS_NAME" == "$INTEL_VGABIOS_PATTERN"* ]] ; then
+      for id in "${INTEL_VGABIOS_DEVICE_ID_LIST[@]}"
+      do
+        cp "$OUTPUT_DIR/$VGABIOS_NAME" "$OUTPUT_DIR/$INTEL_VGABIOS_PATTERN$id.rom"
+      done
+    fi
+
     sed -i '1d' vgabios.list
   done
 
@@ -117,6 +131,8 @@ while getopts "r:x:u:dh" opt; do
          u) export USER="$OPTARG" ;;
      esac
 done
+
+mkdir -p "$OUTPUT_DIR" || true
 
 if is_new_x86_layout "$ROM_FILE" ; then
   get_real_mac "$ROM_FILE"

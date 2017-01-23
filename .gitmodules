@@ -14,3 +14,7 @@
 	path = tools/fcode-utils
 	url = https://github.com/openbios/fcode-utils.git
 	branch = master
+[submodule "bios_extract"]
+	path = tools/bios_extract
+	url = https://review.coreboot.org/bios_extract.git
+	branch = master
