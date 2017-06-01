@@ -46,4 +46,4 @@ utils:
 clean :
 	rm -rf $(TOOLS_DIR)
 	-for d in $(MAKE_DIRS); do (cd $$d; $(MAKE) clean ); done
-	-for d in $(CMAKE_DIRS); do (cd $$d; $(MAKE) clean ); done
+	-for d in $(QMAKE_DIRS); do (cd $$d; $(MAKE) distclean ); done

@@ -6,10 +6,6 @@
 	path = tools/uefitool
 	url = https://github.com/LongSoft/UEFITool.git
 	branch = new_engine
-[submodule "me-cleaner"]
-	path = tools/me-cleaner
-	url = https://github.com/corna/me_cleaner.git
-	branch = master
 [submodule "fcode-utils"]
 	path = tools/fcode-utils
 	url = https://github.com/openbios/fcode-utils.git

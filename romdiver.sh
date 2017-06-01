@@ -18,10 +18,12 @@ declare -a INTEL_VGABIOS_DEVICE_ID_LIST=("0406" "0106")
 
 ROM_FILE=""
 OUTPUT_DIR=""
-DISABLE_ME=0
+VERBOSE=0
 USER=""
 
-set -x
+if $VERBOSE ; then
+  set -x
+fi
 
 function is_new_x86_layout() {
   local src="$1"
@@ -33,16 +35,8 @@ function get_real_mac() {
   local src="$1"
 
   $IFDTOOL -f "$src" | awk -F: -v key="The MAC address might be at offset 0x1000" \
-  '\$1==key {printf(\"%s:%s:%s:%s:%s:%s\", \$2, \$3, \$4, \$5, \$6, \$7)}' | tr -d '[:space:]' > $OUTPUT_DIR/macaddress
+  "\$1==key {printf(\"%s:%s:%s:%s:%s:%s\", \$2, \$3, \$4, \$5, \$6, \$7)}" | tr -d '[:space:]' > $OUTPUT_DIR/macaddress
   chown "$USER:" "$OUTPUT_DIR/macaddress"
-}
-
-function disable_me() {
-  local src="$1"
-
-  if [ -f "$src" ] ; then
-    $ME_CLEANER "$src"
-  fi
 }
 
 function get_vgabios_name() {
@@ -55,7 +49,7 @@ function get_vgabios_name() {
 function extract_x86_blobs() {
   local src="$1"
 
-  cp "$src" "$OUTPUT_DIR/rom.bin"
+  cp -f "$src" "$OUTPUT_DIR/rom.bin"
   $IFDTOOL -d -f "$OUTPUT_DIR/rom.bin"
 
   mv "$OUTPUT_DIR/rom.bin.BIOS.bin" "$OUTPUT_DIR/uefi.bin"
@@ -79,7 +73,7 @@ function extract_vgabios() {
 
   while IFS=$'\n' read -r p < vgabios.list
   do
-    cp "$p" vgabios.bin
+    cp -f "$p" vgabios.bin
     get_vgabios_name vgabios.bin
     source vgabios_pci.name
     rm vgabios_pci.name
@@ -89,7 +83,7 @@ function extract_vgabios() {
     if [[ "$VGABIOS_NAME" == "$INTEL_VGABIOS_PATTERN"* ]] ; then
       for id in "${INTEL_VGABIOS_DEVICE_ID_LIST[@]}"
       do
-        cp "$OUTPUT_DIR/$VGABIOS_NAME" "$OUTPUT_DIR/$INTEL_VGABIOS_PATTERN$id.rom"
+        cp -f "$OUTPUT_DIR/$VGABIOS_NAME" "$OUTPUT_DIR/$INTEL_VGABIOS_PATTERN$id.rom"
       done
     fi
 
@@ -112,20 +106,20 @@ function extract_gop() {
   vbt_root=$(find "$(basename "$src.dump")" -type d -name "$vbt_pattern")
   vbt_file="$vbt_root/0 Raw section/body.bin"
 
-  cp "$gop_file" "$OUTPUT_DIR/IntelGopDriver.efi"
-  cp "$vbt_file" "$OUTPUT_DIR/IntelGopVbt"
+  cp -f "$gop_file" "$OUTPUT_DIR/IntelGopDriver.efi"
+  cp -f "$vbt_file" "$OUTPUT_DIR/IntelGopVbt"
 
   rm -rf "$(basename "$src.dump")"
 }
 
-if ( ! getopts "r:x:u:dh" opt); then
-	echo "Usage: $(basename "$0") options ( -d disable Management Engine ) ( -r rom.bin ) ( -x output dir ) ( -u perms for user ) -h for help";
+if ( ! getopts "r:x:u:vh" opt); then
+	echo "Usage: $(basename "$0") options ( -r rom.bin ) ( -x output dir ) ( -u perms for user ) ( -v verbose ) -h for help";
 	exit $E_OPTERROR
 fi
 
-while getopts "r:x:u:dh" opt; do
+while getopts "r:x:u:vh" opt; do
      case $opt in
-         d) export DISABLE_ME=1 ;;
+         v) export VERBOSE=1 ;;
          r) export ROM_FILE="$OPTARG" ;;
          x) export OUTPUT_DIR="$OPTARG" ;;
          u) export USER="$OPTARG" ;;
@@ -137,9 +131,6 @@ mkdir -p "$OUTPUT_DIR" || true
 if is_new_x86_layout "$ROM_FILE" ; then
   get_real_mac "$ROM_FILE"
   extract_x86_blobs "$ROM_FILE"
-  if [ "$DISABLE_ME" == "1" ] ; then
-    disable_me "$OUTPUT_DIR/me.bin"
-  fi
   extract_vgabios "$OUTPUT_DIR/uefi.bin" "$INTEL_NVIDIA_PATTERN"
   extract_gop "$OUTPUT_DIR/uefi.bin" "$GOP_DRIVER_PATTERN" "$GOP_VBT_PATTERN"
 fi
